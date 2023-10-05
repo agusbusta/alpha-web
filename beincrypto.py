@@ -8,20 +8,38 @@ import json
 # Content must have at least one keyword
 # Must have an h1 - title
 
-def validate_date_beincrypto(date): # Date can't be more than 24 hours old
+from datetime import datetime, timedelta
+import re
+
+def validate_date_beincrypto(date):
     print('date > ', date)
     current_date = datetime.now()
-    date_format = '%Y-%m-%d'
     valid_date = None
 
-    try:
-        article_date = datetime.strptime(date, date_format)
-        if article_date.date() == current_date.date():
+    # Utiliza una expresión regular para extraer la fecha en formato año-mes-día
+    date_pattern = r'(\d{4}-\d{2}-\d{2})'
+    match = re.search(date_pattern, date)
+
+    if match:
+        article_date = datetime.strptime(match.group(1), '%Y-%m-%d')
+        # Comprueba si la fecha está dentro del rango de 24 horas
+        if current_date.date() == article_date.date() or current_date.date() - article_date.date() == timedelta(days=1):
             valid_date = date
-    except ValueError as e:
-        valid_date = None
 
     return valid_date
+
+# Function to extract image URLs from the HTML content
+def extract_image_urls(html):
+    image_urls = []
+    soup = BeautifulSoup(html, 'html.parser')
+    img_elements = soup.find_all('img')
+    
+    for img in img_elements:
+        src = img.get('src')
+        if src and src.startswith('https://s32679.pcdn.co/'):
+            image_urls.append(src)
+    
+    return image_urls
 
 # Load keywords from the JSON file
 with open('keywords.json', 'r') as json_file:
@@ -77,9 +95,13 @@ def validate_article(article_link, keywords_dict):
         date = date_time_element['datetime'].strip() if date_time_element and 'datetime' in date_time_element.attrs else None
         valid_date = validate_date_beincrypto(date)
 
+        # Extract image URLs from the article
+        image_urls = extract_image_urls(article_response.text)
+
         # Comprueba si contiene palabra clave y si la fecha es válida
         if contains_keyword and valid_date:
             print(content, valid_date)
+            print("Image URLs:", image_urls)
             return content, valid_date
         else:
             print("The article does not meet the required conditions.")
@@ -88,4 +110,5 @@ def validate_article(article_link, keywords_dict):
     print("Title:", title)
     print("Keywords Dict:", keywords_dict)
 
-validate_article('https://cointelegraph.com/news/crypto-debit-card-issuance-wirex-taps-zk-proofs', keyword_dict)
+# Llama a la función con el enlace del artículo
+validate_article('https://es.beincrypto.com/aprende/bonos-corredor-bolsa-libertex/', keyword_dict)
