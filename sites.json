@@ -1,0 +1,87 @@
+[
+    { "topic": "bitcoin",
+      "sites": [
+        {
+          "site": "https://cointelegraph.com/tags/bitcoin",
+          "base_url": "https://cointelegraph.com",
+          "website_name": "Cointelegraph",
+          "is_URL_complete": false
+        },
+        {
+          "site": "https://beincrypto.com/bitcoin-news",
+          "base_url": "https://beincrypto.com",
+          "website_name": "Beincrypto",
+          "is_URL_complete": true
+        },
+        {
+          "site": "https://bitcoinist.com/category/bitcoin",
+          "base_url": "https://bitcoinist.com",
+          "website_name": "Bitcoinist",
+          "is_URL_complete": true
+        },
+        {
+          "site": "https://coingape.com/category/news/bitcoin-news",
+          "base_url": "https://coingape.com",
+          "website_name": "Coingape",
+          "is_URL_complete": true
+        },
+        {
+          "site": "https://www.coindesk.com/tag/bitcoin",
+          "base_url": "https://www.coindesk.com",
+          "website_name": "Coindesk",
+          "is_URL_complete": false
+        }
+      ]    
+    },
+    { "topic": "ethereum",
+      "sites": [
+        {
+          "site": "https://cointelegraph.com/tags/ethereum",
+          "base_url": "https://cointelegraph.com",
+          "website_name": "Cointelegraph",
+          "is_URL_complete": false
+        },
+        {
+          "site": "https://es.beincrypto.com/noticias-ethereum/",
+          "base_url": "https://beincrypto.com",
+          "website_name": "Beincrypto",
+          "is_URL_complete": true
+        },
+        {
+          "site": "https://bitcoinist.com/category/ethereum/",
+          "base_url": "https://bitcoinist.com",
+          "website_name": "Bitcoinist",
+          "is_URL_complete": true
+        },
+        {
+          "site": "https://coingape.com/category/ethereum-news/",
+          "base_url": "https://coingape.com",
+          "website_name": "Coingape",
+          "is_URL_complete": true
+        },
+        {
+          "site": "https://www.coindesk.com/tag/ether/",
+          "base_url": "https://www.coindesk.com",
+          "website_name": "Coindesk",
+          "is_URL_complete": false
+        }
+      ]    
+    },
+    { "topic": "hacks",
+      "sites": [
+        {
+          "site": "https://cointelegraph.com/search?query=hacks",
+          "base_url": "https://cointelegraph.com",
+          "website_name": "Cointelegraph",
+          "is_URL_complete": false
+        },
+        {
+          "site": "https://www.coindesk.com/tag/hacks/",
+          "base_url": "https://www.coindesk.com",
+          "website_name": "Coindesk",
+          "is_URL_complete": false
+        }
+      ]    
+    }
+]
+  
