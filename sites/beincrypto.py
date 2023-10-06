@@ -41,9 +41,10 @@ def extract_image_urls(html):
     
     return image_urls
 
-# Load keywords from the JSON file
-with open('keywords.json', 'r') as json_file:
+
+with open('/Users/agustin/Desktop/alphaWeb/data.json', 'r') as json_file:
     keywords_data = json.load(json_file)
+
 
 # Create a function to validate content
 keyword_dict = {}
