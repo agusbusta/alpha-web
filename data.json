@@ -612,6 +612,8 @@
             "rewards",
             "add",
             "delegated"
-        ]    
+        ],
+        "sites": [
+        ]     
     }
 ]

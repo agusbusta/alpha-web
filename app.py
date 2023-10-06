@@ -1,7 +1,7 @@
 import time
 import json
 from db import db_url
-from db import session
+from db import session, SCRAPPING_DATA
 from pathlib import Path
 from flask import Flask, request
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MAX_INSTANCES, EVENT_JOB_EXECUTED
@@ -20,9 +20,17 @@ THIS_FOLDER = Path(__file__).parent.resolve() # takes the parent path
 app = Flask(__name__)
 
 def start_periodic_scraping():
-    print('running')
-    # time.sleep(200000)
-    return 'ok from function'
+
+    scrapping_data_objects = session.query(SCRAPPING_DATA).all()
+
+    for scrapping_data in scrapping_data_objects:
+        print('main word >', scrapping_data.main_keyword)
+    for keyword in scrapping_data.keywords:
+        print('keyword > ', keyword.keyword)
+    for site in scrapping_data.sites:
+        print('sites > ', site)
+
+    return 'ok'
 
 
 def activate_news_bot():
@@ -78,9 +86,8 @@ def news_bot_commands():
             res, status = activate_news_bot()
             return res, status
         elif command == 'deactivate':
-            data = deactivate_news_bot()
-            print(data)
-            return 'ok', 200
+            response, status = deactivate_news_bot()
+            return response, status
         else:
             return 'Command not valid', 400
         
@@ -97,28 +104,18 @@ def job_max_instances_reached(event): # for the status with an error of the bot
   
 
 if __name__ == "__main__":
-    try:
+    # try:
         scheduler.add_listener(job_error, EVENT_JOB_ERROR)
         scheduler.add_listener(job_max_instances_reached, EVENT_JOB_MAX_INSTANCES)
         scheduler.add_listener(job_executed, EVENT_JOB_EXECUTED)
-        app.run(port=4000, debug=False, threaded=True, use_reloader=True)
+        app.run(port=4000, debug=True, threaded=True, use_reloader=True)
         print('AI Alpha server was activated')
-    except (KeyboardInterrupt, SystemExit):
-        print('AI Alpha server was deactivated')
-        scheduler.shutdown()
+    # except (KeyboardInterrupt, SystemExit):
+    #     print('AI Alpha server was deactivated')
+    #     scheduler.shutdown()
 
 
 
 
 
 
-
-
-
-
-
-
-
-#  status = session.query(NEWS_BOT_SETTINGS).first()
-#             status.is_bot_active = True
-#             session.commit()

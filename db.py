@@ -2,7 +2,11 @@ from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, Boole
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from pathlib import Path
+import json
 from sqlalchemy.orm import sessionmaker
+
+THIS_FOLDER = Path(__file__).parent.resolve()
 
 DB_NAME='aialpha'    
 DB_USER='postgres' 
@@ -40,16 +44,6 @@ class IMAGE(Base):
     created_at = Column(DateTime, default=datetime.utcnow)   
 
 
-# status of the whole bot
-
-class NEWS_BOT_SETTINGS(Base):
-    __tablename__ = 'news_bot_setting'
-
-    id = Column(Integer, primary_key=True)
-    is_bot_active = Column(Boolean)
-    created_at = Column(DateTime, default=datetime.utcnow)  
-
-
 # data of the sites
 
 class SCRAPPING_DATA(Base):
@@ -83,12 +77,37 @@ class SITES(Base):
 # export the connection
 
 Base.metadata.create_all(engine)
-session = Session()   
+session = Session()  
 
 
-# create the default status of the whole bot
+if not session.query(SCRAPPING_DATA).first():
 
-if session.query(NEWS_BOT_SETTINGS).count() == 0:
-    first_record = NEWS_BOT_SETTINGS(is_bot_active=False)
-    session.add(first_record)
-    session.commit()         
+    with open(f'{THIS_FOLDER}/data.json', 'r') as data_file:
+        config = json.load(data_file)
+
+    for item in config:
+        main_keyword = item['main_keyword']
+        keywords = item['keywords']
+        sites = item['sites']
+
+        scrapping_data = SCRAPPING_DATA(main_keyword=main_keyword)
+
+        for keyword in keywords:
+            scrapping_data.keywords.append(KEWORDS(keyword=keyword))
+
+        for site_data in sites:
+            site = SITES(
+                site=site_data['site'],
+                base_url=site_data['base_url'],
+                website_name=site_data['website_name'],
+                is_URL_complete=site_data['is_URL_complete']
+            )
+            scrapping_data.sites.append(site)
+
+
+        session.add(scrapping_data)
+
+    print('initial data saved to db')
+    session.commit()
+
+     
