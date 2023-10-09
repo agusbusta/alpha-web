@@ -1,15 +1,9 @@
-from datetime import datetime
-import requests
-from bs4 import BeautifulSoup
-import json
-
-# Conditions
-# Date can't be more than 24 hours old
-# Content must have at least one keyword
-# Must have an h1 - title
-
-from datetime import datetime, timedelta
 import re
+import requests
+from datetime import datetime
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+from helpers.verifications import validate_content, title_in_blacklist
 
 def validate_date_beincrypto(date):
     print('date > ', date)
@@ -48,20 +42,8 @@ def extract_image_urls(html):
     return image_urls
 
 
-with open('/Users/agustin/Desktop/alphaWeb/data.json', 'r') as json_file:
-    keywords_data = json.load(json_file)
+def validate_article(article_link, main_keyword):
 
-
-# Create a function to validate content
-keyword_dict = {}
-for entry in keywords_data:
-    if 'main_keyword' in entry:
-        main_keyword = entry['main_keyword']
-        keywords = entry.get('keywords', [])
-        keyword_dict[main_keyword] = keywords
-
-# Function to validate the article using keywords
-def validate_article(article_link, keywords_dict):
     headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'
         }
@@ -69,55 +51,40 @@ def validate_article(article_link, keywords_dict):
     article_response = requests.get(article_link, headers=headers)
     article_content_type = article_response.headers.get("Content-Type", "").lower() 
 
-    content = ""  # Inicializa content aquí
-
     if article_response.status_code == 200 and 'text/html' in article_content_type:
         article_soup = BeautifulSoup(article_response.text, 'html.parser')
 
         title_element = article_soup.find('h1')
         title = title_element.text.strip() if title_element else None 
 
-        contains_keyword = False
-        
-        # Search for keywords in the title
-        for main_keyword, keywords in keywords_dict.items():
-            if main_keyword.lower() in title.lower():
-                contains_keyword = True
-                break
+        content = "" 
+        all_p_elements = article_soup.findAll("p")
+        for el in all_p_elements:
+            content += el.text.lower()
 
-        # If no keyword was found in the title, search in the content
-        if not contains_keyword:
-            all_p_elements = article_soup.findAll("p")
-            for el in all_p_elements:
-                content += el.text.lower()
+        if not title or not content:
+            # print('Article does not have a title or content')
+            return None, None, None, None
+        else:
+            is_title_in_blacklist = title_in_blacklist(title)
+            content_validation = validate_content(main_keyword, content)
+           
+        if is_title_in_blacklist or not content_validation:
+            # print('Article does not meet requirements')
+            return None, None, None, None
 
-            for main_keyword, keywords in keywords_dict.items():
-                for keyword in keywords:
-                    if keyword.lower() in content:
-                        contains_keyword = True
-                        break
-                if contains_keyword:
-                    break
 
         date_time_element = article_soup.find('time')
         date = date_time_element['datetime'].strip() if date_time_element and 'datetime' in date_time_element.attrs else None
         valid_date = validate_date_beincrypto(date)
 
-        # Extract image URLs from the article
         image_urls = extract_image_urls(article_response.text)
 
-        if contains_keyword and valid_date:
-            print("Content:", content)
-            print("Valid Date:", valid_date)
-            print("Image URLs:", image_urls)
-            return content, valid_date
+        if  content_validation and valid_date and title:
+                print("Title >", title)
+                print('Date >', valid_date)
+                print("Image URLs >", image_urls)
+                print("Article Link >", article_link)
+                return title, content, valid_date, image_urls
         else:
-            print("The article does not meet the required conditions.")
-
-
-    print("Title:", title)
-    print("Keywords Dict:", keywords_dict)
-
-
-# Llama a la función con el enlace del artículo
-validate_article('https://es.cointelegraph.com/news/macro-factors-spark-next-crypto-bull-market-q2-2024-real-vision-raoul-pal', keyword_dict)
+            return None, None, None, None
