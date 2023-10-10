@@ -102,4 +102,4 @@ def validate_coingape_article(article_link, main_keyword):
         return None, None, None, None
 
 
-validate_article('https://coingape.com/weekly-recap-crypto-market-remains-strong-btc-eth-rally/', keyword_dict)
+# validate_article('https://coingape.com/weekly-recap-crypto-market-remains-strong-btc-eth-rally/', keyword_dict)

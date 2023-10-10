@@ -91,4 +91,4 @@ def validate_beincrypto_article(article_link, main_keyword):
             # print(f'Error in the request of Beincrypto {str(e)}')
             return None, None, None, None
         
-validate_article('https://es.beincrypto.com/aprende/bonos-corredor-bolsa-libertex/', keyword_dict)
+# validate_article('https://es.beincrypto.com/aprende/bonos-corredor-bolsa-libertex/', keyword_dict)

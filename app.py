@@ -1,21 +1,19 @@
-import time
 import re
-import requests
 from db import db_url
 from pathlib import Path
-from bs4 import BeautifulSoup
+from sqlalchemy import exists
 from flask import Flask, request
-from db import session, SCRAPPING_DATA, KEWORDS
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MAX_INSTANCES, EVENT_JOB_EXECUTED
+from playwright.sync_api import sync_playwright
+from sites.coindesk import validate_coindesk_article
+from sites.coingape import validate_coingape_article
 from apscheduler.jobstores.base import JobLookupError
-from helpers.verifications import url_in_db, title_in_db, title_in_blacklist
+from db import session, SCRAPPING_DATA, KEWORDS, ARTICLE
+from sites.bitcoinist import validate_bitcoinist_article
 from sites.beincrypto import validate_beincrypto_article
 from sites.cointelegraph import validate_cointelegraph_article
-from sites.coingape import validate_coingape_article
-from sqlalchemy import exists
-from playwright.sync_api import sync_playwright
-from sites.bitcoinist import validate_bitcoinist_article
 from apscheduler.schedulers.background import BackgroundScheduler
+from helpers.verifications import url_in_db, title_in_db, title_in_blacklist
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MAX_INSTANCES, EVENT_JOB_EXECUTED
 
 scheduler = BackgroundScheduler()
 scheduler.add_jobstore('sqlalchemy', url= db_url)
@@ -77,7 +75,7 @@ def scrape_articles(sites, main_keyword):
         website_name = sites.website_name
         is_URL_complete = sites.is_URL_complete
 
-        print(f'\nWeb scrapping of {website_name} STARTED')
+        # print(f'Web scrape of {main_keyword} STARTED')
 
         article_urls, website_name = scrape_sites(site,base_url,
                                                    website_name,
@@ -88,34 +86,61 @@ def scrape_articles(sites, main_keyword):
             print(f'No articles found for {website_name}')
             return f'No articles found for {website_name}'
 
-        print('article_urls > ', article_urls)
-
         if article_urls:
             for article_schema in article_urls:
                 article_link = article_schema['url']
 
+                article_to_save = []
+
                 if website_name == 'Beincrypto':
                     title, content, valid_date, image_urls = validate_beincrypto_article(article_link, main_keyword)
                     if title and content and valid_date:
+                        article_to_save.append((title, content, valid_date, article_link, website_name))
                         print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Bitcoinist':
                     title, content, valid_date, image_urls = validate_bitcoinist_article(article_link, main_keyword)
                     if title and content and valid_date:
+                        article_to_save.append((title, content, valid_date, article_link, website_name))
                         print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Cointelegraph':
                     title, content, valid_date, image_urls = validate_cointelegraph_article(article_link, main_keyword)
                     if title and content and valid_date:
+                        article_to_save.append((title, content, valid_date, article_link, website_name))
                         print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Coingape':
                     title, content, valid_date, image_urls = validate_coingape_article(article_link, main_keyword)
                     if title and content and valid_date:
+                        article_to_save.append((title, content, valid_date, article_link, website_name))
                         print(f'{website_name} article ok to saved to db')
 
+                if website_name == 'Coindesk':
+                    title, content, valid_date, image_urls = validate_coindesk_article(article_link, main_keyword)
+                    if title and content and valid_date:
+                        article_to_save.append((title, content, valid_date, article_link, website_name))
+                        print(f'{website_name} article ok to saved to db')
 
-            print(f'Web scrapping of {website_name} finished')
+                
+                for article_data in article_to_save:
+                    title, content, valid_date, article_link, website_name = article_data
+
+                    new_article = ARTICLE(title=title,
+                                        content=content,
+                                        date=valid_date,
+                                        url=article_link,
+                                        website_name=website_name
+                                        )
+
+                    session.add(new_article)
+                    session.commit()
+                    print(f'{title} added to db, Link: {article_link}')
+
+                
+
+
+            
             return f'Web scrapping of {website_name} finished'
     except:
         return 'Error in scrape_articles'
@@ -248,16 +273,17 @@ def job_max_instances_reached(event): # for the status with an error of the bot
     print(f'{job_id} news bot warning. Maximum number of running instances reached, consider upgrading the time interval ')
    
 
-if __name__ == "__main__":
-    # try:
+if __name__ == "__main__":       
+    try:
         scheduler.add_listener(job_error, EVENT_JOB_ERROR)
         scheduler.add_listener(job_max_instances_reached, EVENT_JOB_MAX_INSTANCES)
         scheduler.add_listener(job_executed, EVENT_JOB_EXECUTED)
-        app.run(port=4000, debug=False, threaded=True, use_reloader=False)
         print('AI Alpha server was activated')
-    # except (KeyboardInterrupt, SystemExit):
-    #     print('AI Alpha server was deactivated')
-    #     scheduler.shutdown()
+        app.run(port=4000, threaded=True, use_reloader=False)
+    except (KeyboardInterrupt, SystemExit):
+        pass 
+
+    print('AI Alpha server was deactivated')
 
 
 

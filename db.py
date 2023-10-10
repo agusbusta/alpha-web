@@ -21,8 +21,7 @@ Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
-# data of each article
-
+# Data of each article
 class ARTICLE(Base):
     __tablename__ = 'article'
 
@@ -33,18 +32,6 @@ class ARTICLE(Base):
     url = Column(String)   
     website_name = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow) 
-    images = relationship("IMAGE", cascade="all, delete-orphan")
-
-class IMAGE(Base):
-    __tablename__ = 'image'
-
-    id = Column(Integer, primary_key=True)
-    article_id = Column(Integer, ForeignKey('article.id'))
-    url = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)   
-
-
-# data of the sites
 
 class SCRAPPING_DATA(Base):
     __tablename__ = 'scrapping_data'
@@ -81,11 +68,11 @@ class SITES(Base):
     is_URL_complete = Column(Boolean)  
     created_at = Column(DateTime, default=datetime.utcnow) 
 
-# export the connection
-
+# Export the sql connection
 Base.metadata.create_all(engine)
 session = Session()  
 
+# Populate the blacklist table
 if not session.query(BLACKLIST).first():
         
     with open(f'{THIS_FOLDER}/data.json', 'r') as data_file:
@@ -97,9 +84,10 @@ if not session.query(BLACKLIST).first():
         list_blackword=BLACKLIST(black_Word=word.casefold())
         session.add(list_blackword)
 
+    print('Initial black list saved to db')
     session.commit()
 
-   
+# Populates the sites and keyword tables
 if not session.query(SCRAPPING_DATA).first():
 
     with open(f'{THIS_FOLDER}/data.json', 'r') as data_file:
@@ -127,7 +115,7 @@ if not session.query(SCRAPPING_DATA).first():
         
         session.add(scrapping_data)
 
-    print('initial data saved to db')
+    print('Initial site data saved to db')
     session.commit()
 
      
