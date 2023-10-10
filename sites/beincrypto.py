@@ -64,7 +64,7 @@ def validate_beincrypto_article(article_link, main_keyword):
             else:
                 is_title_in_blacklist = title_in_blacklist(title)
                 content_validation = validate_content(main_keyword, content)
-
+                
             if is_title_in_blacklist or not content_validation:
                 # print('Article does not meet requirements')
                 return None, None, None, None
@@ -90,3 +90,5 @@ def validate_beincrypto_article(article_link, main_keyword):
     except Exception as e:
             # print(f'Error in the request of Beincrypto {str(e)}')
             return None, None, None, None
+        
+validate_article('https://es.beincrypto.com/aprende/bonos-corredor-bolsa-libertex/', keyword_dict)
