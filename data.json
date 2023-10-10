@@ -611,6 +611,12 @@
             "base_url": "https://cointelegraph.com",
             "website_name": "Cointelegraph",
             "is_URL_complete": false
+          },
+          {
+            "site": "https://www.coindesk.com/search?s=lsd",
+            "base_url": "https://www.coindesk.com",
+            "website_name": "Coindesk",
+            "is_URL_complete": false
           }
         ]     
     },

@@ -13,6 +13,7 @@ from sites.beincrypto import validate_beincrypto_article
 from sites.cointelegraph import validate_cointelegraph_article
 from sites.coingape import validate_coingape_article
 from sqlalchemy import exists
+from playwright.sync_api import sync_playwright
 from sites.bitcoinist import validate_bitcoinist_article
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -42,6 +43,7 @@ def scrape_articles(sites, main_keyword):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
             'Accept-Language': 'en-US,en;q=0.9'
         }
+
 
         response = requests.get(site, headers=headers)
         content_type = response.headers.get("Content-Type", "").lower()
@@ -80,6 +82,7 @@ def scrape_articles(sites, main_keyword):
             print(f'No articles found for {website_name}')
             return f'No articles found for {website_name}'
 
+        print('article_urls > ', article_urls)
 
         if article_urls:
             for article_schema in article_urls:
@@ -234,7 +237,9 @@ def job_error(event): # for the status with an error of the bot
     print(f'{event.job_id} has an internal error')
 
 def job_max_instances_reached(event): # for the status with an error of the bot
-    print(f'{event.job_id} maximum number of running instances reached')
+    job_id = event.job_id
+    print(f'{job_id} news bot. Maximum number of running instances reached')
+    scheduler.remove_job(job_id)
     scheduler.shutdown()
    
 

@@ -81,13 +81,12 @@ def validate_beincrypto_article(article_link, main_keyword):
             image_urls = extract_image_urls(article_response.text)
 
             if  content_validation and valid_date and title:
-                print("Title >", title)
+                print("\nTitle >", title)
                 print('Date >', valid_date)
-                print("Image URLs >", image_urls)
-                print("Article Link >", article_link)
+                print("Article_link >", article_link)
                 return title, content, valid_date, image_urls
             else:
                 return None, None, None, None
     except Exception as e:
-            print(f'Error in the request of Beincrypto {str(e)}')
+            # print(f'Error in the request of Beincrypto {str(e)}')
             return None, None, None, None
