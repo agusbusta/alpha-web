@@ -94,7 +94,7 @@ if not session.query(BLACKLIST).first():
     black_list = config[-1]
     
     for word in black_list['black_list']:
-        list_blackword=BLACKLIST(black_Word=word)
+        list_blackword=BLACKLIST(black_Word=word.casefold())
         session.add(list_blackword)
 
     session.commit()
@@ -110,10 +110,10 @@ if not session.query(SCRAPPING_DATA).first():
         keywords = item['keywords']
         sites = item['sites']
 
-        scrapping_data = SCRAPPING_DATA(main_keyword=keyword)
+        scrapping_data = SCRAPPING_DATA(main_keyword=keyword.casefold())
 
         for keyword in keywords:
-            scrapping_data.keywords.append(KEWORDS(keyword=keyword))
+            scrapping_data.keywords.append(KEWORDS(keyword=keyword.casefold()))
 
         for site_data in sites:
             site = SITES(

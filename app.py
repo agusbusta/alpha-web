@@ -10,6 +10,8 @@ from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MAX_INSTANCES, EVENT_J
 from apscheduler.jobstores.base import JobLookupError
 from helpers.verifications import url_in_db, title_in_db
 from sites.beincrypto import validate_beincrypto_article
+from sites.cointelegraph import validate_cointelegraph_article
+from sites.coingape import validate_coingape_article
 from sqlalchemy import exists
 from sites.bitcoinist import validate_bitcoinist_article
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -34,7 +36,7 @@ def scrape_articles(sites, main_keyword):
         website_name = sites.website_name
         is_URL_complete = sites.is_URL_complete
 
-        print('site > ', site)
+        print(f'Web scrapping of {website_name} STARTED')
     
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
@@ -73,9 +75,12 @@ def scrape_articles(sites, main_keyword):
 
                 if title_validation and not is_url_in_db and not is_title_in_db:
                     article_urls.append({'url': article_url, 'title': article_title})
+        
+        if not article_urls:
+            print(f'No articles found for {website_name}')
+            return f'No articles found for {website_name}'
 
 
-        # print('article_urls >', article_urls)
         if article_urls:
             for article_schema in article_urls:
                 article_link = article_schema['url']
@@ -91,10 +96,18 @@ def scrape_articles(sites, main_keyword):
                         print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Cointelegraph':
-                    title, content, valid_date, image_urls = validate_bitcoinist_article(article_link, main_keyword)
+                    title, content, valid_date, image_urls = validate_cointelegraph_article(article_link, main_keyword)
                     if title and content and valid_date:
                         print(f'{website_name} article ok to saved to db')
 
+                if website_name == 'Coingape':
+                    title, content, valid_date, image_urls = validate_coingape_article(article_link, main_keyword)
+                    if title and content and valid_date:
+                        print(f'{website_name} article ok to saved to db')
+
+
+            print(f'Web scrapping of {website_name} finished')
+            return f'Web scrapping of {website_name} finished'
     except:
         return 'Error in scrape_articles'
 
@@ -122,7 +135,7 @@ def activate_news_bot(target):
     if news_bot_job:
         return f'{target.capitalize()} News Bot is already active', 400
     else:
-        scrapping_data_objects = session.query(SCRAPPING_DATA).filter(SCRAPPING_DATA.main_keyword == target).all()
+        scrapping_data_objects = session.query(SCRAPPING_DATA).filter(SCRAPPING_DATA.main_keyword == target.casefold()).all()
 
         if not scrapping_data_objects:
             return f'{target.capitalize()} does not match any in the database', 404
@@ -131,7 +144,7 @@ def activate_news_bot(target):
             main_keyword = scrapping_data_objects[0].main_keyword
             job = scheduler.add_job(start_periodic_scraping, 'interval', minutes=2, id=target, replace_existing=True, args=[main_keyword])
             if job:
-                return f'{str(target).capitalize()} News Bot activated', 200
+                return f'{target.capitalize()} News Bot activated', 200
             else: 
                 return f'Error while activating the {target.capitalize()} News Bot'
 
@@ -230,7 +243,7 @@ if __name__ == "__main__":
         scheduler.add_listener(job_error, EVENT_JOB_ERROR)
         scheduler.add_listener(job_max_instances_reached, EVENT_JOB_MAX_INSTANCES)
         scheduler.add_listener(job_executed, EVENT_JOB_EXECUTED)
-        app.run(port=4000, debug=False, threaded=True, use_reloader=True)
+        app.run(port=4000, debug=False, threaded=True, use_reloader=False)
         print('AI Alpha server was activated')
     # except (KeyboardInterrupt, SystemExit):
     #     print('AI Alpha server was deactivated')

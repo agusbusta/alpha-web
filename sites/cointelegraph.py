@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from helpers.verifications import validate_content, title_in_blacklist
 
-def validate_date_beincrypto(date):
-    print('date > ', date)
+def validate_date_cointelegraph(date):
+   
     current_date = datetime.now()
     valid_date = None
 
@@ -42,49 +42,56 @@ def extract_image_urls(html):
     return image_urls
 
 
-def validate_article(article_link, main_keyword):
+def validate_cointelegraph_article(article_link, main_keyword):
 
-    headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'
-        }
-    
-    article_response = requests.get(article_link, headers=headers)
-    article_content_type = article_response.headers.get("Content-Type", "").lower() 
+    try:
 
-    if article_response.status_code == 200 and 'text/html' in article_content_type:
-        article_soup = BeautifulSoup(article_response.text, 'html.parser')
+        headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'
+            }
+   
+        article_response = requests.get(article_link, headers=headers)
+        article_content_type = article_response.headers.get("Content-Type", "").lower() 
 
-        title_element = article_soup.find('h1')
-        title = title_element.text.strip() if title_element else None 
+        if article_response.status_code == 200 and 'text/html' in article_content_type:
+            article_soup = BeautifulSoup(article_response.text, 'html.parser')
 
-        content = "" 
-        all_p_elements = article_soup.findAll("p")
-        for el in all_p_elements:
-            content += el.text.lower()
+            title_element = article_soup.find('h1')
+            title = title_element.text.strip() if title_element else None 
 
-        if not title or not content:
-            # print('Article does not have a title or content')
-            return None, None, None, None
-        else:
-            is_title_in_blacklist = title_in_blacklist(title)
-            content_validation = validate_content(main_keyword, content)
-           
-        if is_title_in_blacklist or not content_validation:
-            # print('Article does not meet requirements')
-            return None, None, None, None
+            content = "" 
+            all_p_elements = article_soup.findAll("p")
+            for el in all_p_elements:
+                content += el.text.lower()
+        
+
+            if not title or not content:
+                # print('Article does not have a title or content')
+                return None, None, None, None
+            else:
+                is_title_in_blacklist = title_in_blacklist(title)
+                content_validation = validate_content(main_keyword, content)
+            
+            if is_title_in_blacklist or not content_validation:
+                # print('Article does not meet requirements')
+                return None, None, None, None
 
 
-        date_time_element = article_soup.find('time')
-        date = date_time_element['datetime'].strip() if date_time_element and 'datetime' in date_time_element.attrs else None
-        valid_date = validate_date_beincrypto(date)
+            date_time_element = article_soup.find('time')
+            date = date_time_element['datetime'].strip() if date_time_element and 'datetime' in date_time_element.attrs else None
+            valid_date = validate_date_cointelegraph(date)
 
-        image_urls = extract_image_urls(article_response.text)
+            image_urls = extract_image_urls(article_response.text)
 
-        if  content_validation and valid_date and title:
-                print("Title >", title)
-                print('Date >', valid_date)
-                print("Image URLs >", image_urls)
-                print("Article Link >", article_link)
-                return title, content, valid_date, image_urls
-        else:
-            return None, None, None, None
+            if  content_validation and valid_date and title:
+                    print("Title >", title)
+                    print('Date >', valid_date)
+                    print("Image URLs >", image_urls)
+                    print("Article Link >", article_link)
+                    return title, content, valid_date, image_urls
+            else:
+                return None, None, None, None
+    except Exception as e:
+        print(str(e))
+        return None, None, None, None
+

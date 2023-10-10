@@ -12,15 +12,16 @@ def title_in_db(input_title): #  true if title in db
         is_title_in_db = False
   
         for title in title_list:
-            title_similarity_ratio = SequenceMatcher(None, input_title, title).ratio()
+            title_similarity_ratio = SequenceMatcher(None, input_title.casefold(), title.casefold()).ratio()
 
             if title_similarity_ratio >= similarity_threshold:
                 is_title_in_db = True
                 break
 
         return is_title_in_db
-    except:
-        return 'error in title_in_db'
+    except Exception as e:
+        print(f'error in title_in_db: {str(e)}')
+        return f'error in title_in_db: {str(e)}'
 
 def url_in_db(input_url): #  true if url in db
 
@@ -32,35 +33,37 @@ def url_in_db(input_url): #  true if url in db
         is_url_in_db = False
   
         for url in url_list:
-            url_similarity_ratio = SequenceMatcher(None, input_url, url).ratio()
+            url_similarity_ratio = SequenceMatcher(None, input_url.casefold(), url.casefold()).ratio()
 
             if url_similarity_ratio >= similarity_threshold:
                 is_url_in_db = True
                 break
 
         return is_url_in_db
-    except:
-        return 'error in url_in_db'
+    except Exception as e:
+        print(f'error in url_in_db: {str(e)}')
+        return f'error in url_in_db: {str(e)}'
 
 def validate_content(main_keyword, content):
-
-    try:   
-        scrapping_data_objects = session.query(SCRAPPING_DATA).filter(SCRAPPING_DATA.main_keyword == main_keyword).all()
+    try:
+        # Query the database for the SCRAPPING_DATA objects with a case-insensitive match for main_keyword
+        scrapping_data_objects = session.query(SCRAPPING_DATA).filter(SCRAPPING_DATA.main_keyword == main_keyword.casefold()).all()
 
         keywords = scrapping_data_objects[0].keywords
-        keyword_values = [keyword.keyword for keyword in keywords] # list of keywords
-        
+        keyword_values = [keyword.keyword.casefold() for keyword in keywords]  # List of case-folded keywords
+
         A = ahocorasick.Automaton()
         for idx, keyword in enumerate(keyword_values):
             A.add_word(keyword, (idx, keyword))
         A.make_automaton()
-        
-        for _, keyword in A.iter(content):
+
+        for _, keyword in A.iter(content.casefold()):
             return True
-        
+
         return False
-    except:
-        return 'error in validate_content'
+    except Exception as e:
+        print(f'error in validate_content: {str(e)}')
+        return f'error in validate_content: {str(e)}'
 
 def title_in_blacklist(input_title_formatted):
 
@@ -80,8 +83,9 @@ def title_in_blacklist(input_title_formatted):
 
         return is_title_in_blacklist
     
-    except:
-        return 'error in title_in_blacklist'
+    except Exception as e:
+        print(f'error in title_in_blacklist: {str(e)}')
+        return f'error in title_in_blacklist: {str(e)}'
 
 
 

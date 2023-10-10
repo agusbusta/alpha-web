@@ -1,30 +1,17 @@
-from datetime import datetime
-import requests
+from helpers.verifications import validate_content, title_in_blacklist
 from bs4 import BeautifulSoup
-import json
-
-# Conditions
-# Date can't be more than 24 hours old
-# Content must have at least one keyword
-# Must have an h1 - title
-
-from datetime import datetime, timedelta
-import re
-
+import requests
 
 def validate_date_coingape(html):
-    # Encuentra el div con clase 'publishby d-flex'
     date_div = html.find('div', class_='publishby d-flex')
 
     if date_div:
         # Verifica si el texto del div contiene "mins ago" o "hours ago"
         date_text = date_div.text.lower()
         if "mins ago" in date_text or "hours ago" in date_text:
-            return True
+            return date_text.strip()
 
     return False
-
-
 
 def extract_image_urls(html):
     image_urls = []
@@ -38,19 +25,6 @@ def extract_image_urls(html):
             image_urls.append(src)
 
     return image_urls
-
-
-with open('/Users/agustin/Desktop/alphaWeb/data.json', 'r') as json_file:
-    keywords_data = json.load(json_file)
-
-
-# Create a function to validate content
-keyword_dict = {}
-for entry in keywords_data:
-    if 'main_keyword' in entry:
-        main_keyword = entry['main_keyword']
-        keywords = entry.get('keywords', [])
-        keyword_dict[main_keyword] = keywords
         
 def extract_article_content(html):
     # Encuentra el div con el ID 'main-content'
@@ -69,74 +43,70 @@ def extract_article_content(html):
             for span_element in span_elements:
                 content += span_element.text.strip() + " "
         
-        return content.strip()
+        return content.strip().casefold()
 
     return None
 
-
-
 # Function to validate the article using keywords
-def validate_article(article_link, keywords_dict):
+def validate_coingape_article(article_link, main_keyword):
+
     headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'
         }
-    
-    article_response = requests.get(article_link, headers=headers)
-    article_content_type = article_response.headers.get("Content-Type", "").lower() 
+    try:
+        article_response = requests.get(article_link, headers=headers)
+        article_content_type = article_response.headers.get("Content-Type", "").lower() 
 
-    content = ""  # Inicializa content aquí
-    html = BeautifulSoup(article_response.text, 'html.parser')  # Parsea el HTML del artículo
+        content = ""  # Inicializa content aquí
+        html = BeautifulSoup(article_response.text, 'html.parser')  # Parsea el HTML del artículo
 
-    if article_response.status_code == 200 and 'text/html' in article_content_type:
-        article_soup = BeautifulSoup(article_response.text, 'html.parser')
+        if article_response.status_code == 200 and 'text/html' in article_content_type:
+            article_soup = BeautifulSoup(article_response.text, 'html.parser')
 
-        title_element = article_soup.find('h1')
-        title = title_element.text.strip() if title_element else None 
+            title_element = article_soup.find('h1')
+            title = title_element.text.strip() if title_element else None 
 
-        contains_keyword = False
+            # Extract article content using the new function
+            content = extract_article_content(article_soup)
+            print('coingape content > ', content)
+
+
+            # content = "" 
+            # all_p_elements = article_soup.findAll("p")
+            # for el in all_p_elements:
+            #     content += el.text.lower()
         
-        # Search for keywords in the title
-        for main_keyword, keywords in keywords_dict.items():
-            if main_keyword.lower() in title.lower():
-                contains_keyword = True
-                break
 
-        # Extract article content using the new function
-        content = extract_article_content(article_soup)
+            if not title or not content:
+                # print('Article does not have a title or content')
+                return None, None, None, None
+            else:
+                is_title_in_blacklist = title_in_blacklist(title)
+                content_validation = validate_content(main_keyword, content)
+            
+            if is_title_in_blacklist or not content_validation:
+                # print('Article does not meet requirements')
+                return None, None, None, None
 
+            # Llama a validate_date_bitcoinist con el contenido HTML del artículo
+            valid_date = validate_date_coingape(html)
 
-        # If no keyword was found in the title, search in the content
-        if not contains_keyword:
-            all_p_elements = article_soup.findAll("p")
-            for el in all_p_elements:
-                content += el.text.lower()
+            # Extract image URLs from the article
+            image_urls = extract_image_urls(article_response.text)
 
-            for main_keyword, keywords in keywords_dict.items():
-                for keyword in keywords:
-                    if keyword.lower() in content:
-                        contains_keyword = True
-                        break
-                if contains_keyword:
-                    break
-
-        # Llama a validate_date_bitcoinist con el contenido HTML del artículo
-        valid_date = validate_date_coingape(html)
-
-        # Extract image URLs from the article
-        image_urls = extract_image_urls(article_response.text)
-
-        if contains_keyword and valid_date:
-            print("Content:", content)
-            print("Valid Date:", valid_date)
-            print("Image URLs:", image_urls)
-            return content, valid_date
-        else:
-            print("The article does not meet the required conditions.")
-
-    print("Title:", title)
-    print("Keywords Dict:", keywords_dict)
+            if  content_validation and valid_date and title:
+                        print("Title >", title)
+                        print('Date >', valid_date)
+                        print("Image URLs >", image_urls)
+                        print("Article Link >", article_link)
+                        return title, content, valid_date, image_urls
+            else:
+                return None, None, None, None
+    except Exception as e:
+        print(str(e))
+        return None, None, None, None
 
 
 
 # Llama a la función con el enlace del artículo
-validate_article('https://coingape.com/pro-bitcoin-us-presidential-candidate-robert-f-kennedy-to-run-as-independent/?utm_source=24hrsupdateall', keyword_dict)
+# validate_coingape_article('https://coingape.com/pro-bitcoin-us-presidential-candidate-robert-f-kennedy-to-run-as-independent/?utm_source=24hrsupdateall', 'ethereum')

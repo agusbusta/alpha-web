@@ -636,7 +636,6 @@
           "Bitcoin Gold",
           "Bitcoinist.com",
           "Bitcoin Core",
-          "Hacks",
           "Ethereum",
           "Ethereum News",
           "Ethereum 101",
@@ -665,7 +664,9 @@
           "CoinDesk Studios",
           "Policy",
           "The Hash",
-          "Markets"
+          "Markets",
+          "Ethereum (ETH) Price Index",
+          "Ethereum News"
         ]    
   }
 ]
