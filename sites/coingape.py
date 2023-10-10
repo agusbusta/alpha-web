@@ -139,4 +139,4 @@ def validate_article(article_link, keywords_dict):
 
 
 # Llama a la función con el enlace del artículo
-validate_article('https://coingape.com/pro-bitcoin-us-presidential-candidate-robert-f-kennedy-to-run-as-independent/?utm_source=24hrsupdateall', keyword_dict)
+validate_article('https://coingape.com/weekly-recap-crypto-market-remains-strong-btc-eth-rally/', keyword_dict)
