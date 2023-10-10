@@ -8,7 +8,7 @@ from flask import Flask, request
 from db import session, SCRAPPING_DATA, KEWORDS
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MAX_INSTANCES, EVENT_JOB_EXECUTED
 from apscheduler.jobstores.base import JobLookupError
-from helpers.verifications import url_in_db, title_in_db
+from helpers.verifications import url_in_db, title_in_db, title_in_blacklist
 from sites.beincrypto import validate_beincrypto_article
 from sites.cointelegraph import validate_cointelegraph_article
 from sites.coingape import validate_coingape_article
@@ -28,39 +28,24 @@ THIS_FOLDER = Path(__file__).parent.resolve() # takes the parent path
 
 app = Flask(__name__)
 
+def scrape_sites(site,base_url, website_name, is_URL_complete, main_keyword):
 
-def scrape_articles(sites, main_keyword):
+    article_urls = []
 
-    try:
-        site = sites.site
-        base_url = sites.base_url
-        website_name = sites.website_name
-        is_URL_complete = sites.is_URL_complete
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
 
-        print(f'Web scrapping of {website_name} STARTED')
-    
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9'
-        }
+        page.goto(site)
+        page.wait_for_load_state('networkidle')
 
+        a_elements = page.query_selector_all('a')
 
-        response = requests.get(site, headers=headers)
-        content_type = response.headers.get("Content-Type", "").lower()
-
-        article_urls = []
-
-        if response.status_code == 200 and 'text/html' in content_type:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            links = soup.find_all('a')
-
-        
-        for link in links:
-            href = link.get('href')
-            article_title = link.text.strip()
+        for link in a_elements:
+            href = link.get_attribute('href')
+            article_title = link.text_content().strip().casefold()
 
             if href and article_title:
-
                 if is_URL_complete == False:
                     article_url = base_url + href.strip()
                 else:
@@ -71,12 +56,33 @@ def scrape_articles(sites, main_keyword):
                 else:
                     input_title_formatted = str(article_title).strip().casefold()
                     title_validation = re.search(main_keyword, input_title_formatted, re.IGNORECASE)
-                
+
                 is_url_in_db = url_in_db(article_url)
                 is_title_in_db = title_in_db(article_title)
-
-                if title_validation and not is_url_in_db and not is_title_in_db:
+                is_title_in_blacklist = title_in_blacklist(article_title)
+           
+                if title_validation and not is_title_in_blacklist and not is_url_in_db and not is_title_in_db:
                     article_urls.append({'url': article_url, 'title': article_title})
+
+
+        browser.close()
+        return article_urls, website_name
+
+
+def scrape_articles(sites, main_keyword):
+
+    try:
+        site = sites.site
+        base_url = sites.base_url
+        website_name = sites.website_name
+        is_URL_complete = sites.is_URL_complete
+
+        print(f'\nWeb scrapping of {website_name} STARTED')
+
+        article_urls, website_name = scrape_sites(site,base_url,
+                                                   website_name,
+                                                   is_URL_complete,
+                                                   main_keyword)
         
         if not article_urls:
             print(f'No articles found for {website_name}')
@@ -113,6 +119,8 @@ def scrape_articles(sites, main_keyword):
             return f'Web scrapping of {website_name} finished'
     except:
         return 'Error in scrape_articles'
+    
+
 
 def start_periodic_scraping(main_keyword):
 
@@ -126,7 +134,6 @@ def start_periodic_scraping(main_keyword):
             scrape_articles(site, main_keyword)
 
         return f'All {str(main_keyword).casefold().capitalize()} sites scraped', 200
-
 
 
 def activate_news_bot(target):
@@ -145,7 +152,7 @@ def activate_news_bot(target):
         
         if scrapping_data_objects:
             main_keyword = scrapping_data_objects[0].main_keyword
-            job = scheduler.add_job(start_periodic_scraping, 'interval', minutes=2, id=target, replace_existing=True, args=[main_keyword])
+            job = scheduler.add_job(start_periodic_scraping, 'interval', minutes=4, id=target, replace_existing=True, args=[main_keyword], max_instances=2)
             if job:
                 return f'{target.capitalize()} News Bot activated', 200
             else: 
@@ -238,9 +245,7 @@ def job_error(event): # for the status with an error of the bot
 
 def job_max_instances_reached(event): # for the status with an error of the bot
     job_id = event.job_id
-    print(f'{job_id} news bot. Maximum number of running instances reached')
-    scheduler.remove_job(job_id)
-    scheduler.shutdown()
+    print(f'{job_id} news bot warning. Maximum number of running instances reached, consider upgrading the time interval ')
    
 
 if __name__ == "__main__":

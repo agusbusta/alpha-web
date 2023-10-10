@@ -41,7 +41,7 @@ def extract_article_content(html):
         for p_element in p_elements:
             span_elements = p_element.find_all('span')
             for span_element in span_elements:
-                content += span_element.text.strip() + " "
+                content += span_element.text.strip()
         
         return content.strip().casefold()
 
@@ -57,7 +57,7 @@ def validate_coingape_article(article_link, main_keyword):
         article_response = requests.get(article_link, headers=headers)
         article_content_type = article_response.headers.get("Content-Type", "").lower() 
 
-        content = ""  # Inicializa content aquí
+        content = "" 
         html = BeautifulSoup(article_response.text, 'html.parser')  # Parsea el HTML del artículo
 
         if article_response.status_code == 200 and 'text/html' in article_content_type:
@@ -85,8 +85,7 @@ def validate_coingape_article(article_link, main_keyword):
             if is_title_in_blacklist or not content_validation:
                 # print('Article does not meet requirements')
                 return None, None, None, None
-
-            # Llama a validate_date_bitcoinist con el contenido HTML del artículo
+           
             valid_date = validate_date_coingape(html)
 
             # Extract image URLs from the article

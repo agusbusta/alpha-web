@@ -44,7 +44,7 @@ def url_in_db(input_url): #  true if url in db
         print(f'error in url_in_db: {str(e)}')
         return f'error in url_in_db: {str(e)}'
 
-def validate_content(main_keyword, content):
+def validate_content(main_keyword, content): # true if content is valid
     try:
         # Query the database for the SCRAPPING_DATA objects with a case-insensitive match for main_keyword
         scrapping_data_objects = session.query(SCRAPPING_DATA).filter(SCRAPPING_DATA.main_keyword == main_keyword.casefold()).all()
@@ -65,7 +65,7 @@ def validate_content(main_keyword, content):
         print(f'error in validate_content: {str(e)}')
         return f'error in validate_content: {str(e)}'
 
-def title_in_blacklist(input_title_formatted):
+def title_in_blacklist(input_title_formatted): # true if title in blacklist
 
     try:
         black_list = session.query(BLACKLIST).all()
