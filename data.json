@@ -176,7 +176,6 @@
             "fibonacci",
             "volume",
             "proof",
-            "to",
             "mining",
             "take",
             "ethereum/eur",
@@ -306,7 +305,6 @@
             "ma",
             "scalability",
             "machine",
-            "and",
             "retracement",
             "rates",
             "ema",
@@ -319,12 +317,6 @@
               "base_url": "https://cointelegraph.com",
               "website_name": "Cointelegraph",
               "is_URL_complete": false
-            },
-            {
-              "site": "https://es.beincrypto.com/noticias-ethereum/",
-              "base_url": "https://beincrypto.com",
-              "website_name": "Beincrypto",
-              "is_URL_complete": true
             },
             {
               "site": "https://bitcoinist.com/category/ethereum/",
@@ -614,6 +606,73 @@
             "delegated"
         ],
         "sites": [
+          {
+            "site": "https://cointelegraph.com/search?query=LSDs",
+            "base_url": "https://cointelegraph.com",
+            "website_name": "Cointelegraph",
+            "is_URL_complete": false
+          },
+          {
+            "site": "https://www.coindesk.com/search?s=lsd",
+            "base_url": "https://www.coindesk.com",
+            "website_name": "Coindesk",
+            "is_URL_complete": false
+          }
         ]     
-    }
+    },
+    {
+      "black_list": [
+          "Bitcoin (BTC) Price Index",
+          "Bitcoin",
+          "Bitcoin Cash Price Index",
+          "bitcoin news",
+          "Bitcoin & Cryptocurrency Calculator and Converter Tool",
+          "Bitcoin Cash (BCH) Price Index",
+          "Bitcoin Calculator",
+          "Bitcoin Price Index (XBX)",
+          "Bitcoin Cash Price Index",
+          "All About Bitcoin",
+          "Bitcoin Casinos",
+          "Bitcoin Price",
+          "What Is Bitcoin?",
+          "Bitcoin 101",
+          "Bitcoin SV",
+          "Wrapped Bitcoin",
+          "Bitcoin Cash",
+          "Bitcoin Gold",
+          "Bitcoinist.com",
+          "Bitcoin Core",
+          "Ethereum",
+          "Ethereum News",
+          "Ethereum 101",
+          "EthereumPoW",
+          "Ethereum$",
+          "Ethereum Classic",
+          "Ethereum Name Service",
+          "ETHEREUM PRICE ANALYSIS",
+          "BITCOIN VS ETHEREUM",
+          "Best Ethereum Gambling Sites",
+          "Ethereum Price",
+          "Ethereum Price Index",
+          "Ethereum$1,",
+          "RSS Logo",
+          "Facebook icon",
+          "stock appreciation rights",
+          "privacy policy",
+          "terms of use",
+          "Privacy",
+          "Security",
+          "TRM Labs",
+          "Fenerbahce Token",
+          "Crypto Prices",
+          "Podcasts",
+          "About",
+          "CoinDesk Studios",
+          "Policy",
+          "The Hash",
+          "Markets",
+          "Ethereum (ETH) Price Index",
+          "Ethereum News"
+        ]    
+  }
 ]

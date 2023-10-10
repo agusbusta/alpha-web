@@ -59,15 +59,22 @@ class KEWORDS(Base):
     __tablename__ = 'keyword'
 
     id = Column(Integer, primary_key=True)
-    keyword_info_id = Column(Integer, ForeignKey('scrapping_data.id'))
+    keyword_info_id = Column(Integer, ForeignKey('scrapping_data.id'), nullable=False)
     keyword = Column(String)  
+    created_at = Column(DateTime, default=datetime.utcnow) 
+
+class BLACKLIST(Base):
+    __tablename__ = 'blacklist'
+
+    id = Column(Integer, primary_key=True)
+    black_Word = Column(String)  
     created_at = Column(DateTime, default=datetime.utcnow) 
 
 class SITES(Base):
     __tablename__ = 'sites'
 
     id = Column(Integer, primary_key=True)
-    keyword_info_id = Column(Integer, ForeignKey('scrapping_data.id'))
+    keyword_info_id = Column(Integer, ForeignKey('scrapping_data.id'), nullable=False)
     site = Column(String)  
     base_url = Column(String)  
     website_name = Column(String)  
@@ -79,21 +86,34 @@ class SITES(Base):
 Base.metadata.create_all(engine)
 session = Session()  
 
+if not session.query(BLACKLIST).first():
+        
+    with open(f'{THIS_FOLDER}/data.json', 'r') as data_file:
+        config = json.load(data_file)
 
+    black_list = config[-1]
+    
+    for word in black_list['black_list']:
+        list_blackword=BLACKLIST(black_Word=word.casefold())
+        session.add(list_blackword)
+
+    session.commit()
+
+   
 if not session.query(SCRAPPING_DATA).first():
 
     with open(f'{THIS_FOLDER}/data.json', 'r') as data_file:
         config = json.load(data_file)
 
-    for item in config:
-        main_keyword = item['main_keyword']
+    for item in config[:-1]:   
+        keyword = item['main_keyword']
         keywords = item['keywords']
         sites = item['sites']
 
-        scrapping_data = SCRAPPING_DATA(main_keyword=main_keyword)
+        scrapping_data = SCRAPPING_DATA(main_keyword=keyword.casefold())
 
         for keyword in keywords:
-            scrapping_data.keywords.append(KEWORDS(keyword=keyword))
+            scrapping_data.keywords.append(KEWORDS(keyword=keyword.casefold()))
 
         for site_data in sites:
             site = SITES(
@@ -104,7 +124,7 @@ if not session.query(SCRAPPING_DATA).first():
             )
             scrapping_data.sites.append(site)
 
-
+        
         session.add(scrapping_data)
 
     print('initial data saved to db')
