@@ -110,6 +110,8 @@ def validate_article(article_link, keywords_dict):
 
     print("Title:", title)
     print("Keywords Dict:", keywords_dict)
+    
+    #asdasdasdasd
 
 # Llama a la función con el enlace del artículo
 validate_article('https://es.beincrypto.com/aprende/bonos-corredor-bolsa-libertex/', keyword_dict)
