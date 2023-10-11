@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from helpers.verifications import validate_content, title_in_blacklist
 import requests
-import json
 import re
 
 
@@ -62,8 +61,8 @@ def validate_beincrypto_article(article_link, main_keyword):
                 # print('Article does not have a title or content')
                 return None, None, None, None
             else:
-                is_title_in_blacklist = title_in_blacklist(title)
-                content_validation = validate_content(main_keyword, content)
+                is_title_in_blacklist = title_in_blacklist(title) # verify if the title is in the blacklist - true if in blacklist
+                content_validation = validate_content(main_keyword, content) # true if content valid
                 
             if is_title_in_blacklist or not content_validation:
                 # print('Article does not meet requirements')
@@ -76,9 +75,9 @@ def validate_beincrypto_article(article_link, main_keyword):
                 # print('Article does not have a date')
                 return None, None, None, None
             else:
-                valid_date = validate_date_beincrypto(date)
+                valid_date = validate_date_beincrypto(date) # return the actual date
 
-            image_urls = extract_image_urls(article_response.text)
+            image_urls = extract_image_urls(article_response.text) # return the images
 
             if  content_validation and valid_date and title:
                 print("\nTitle >", title)

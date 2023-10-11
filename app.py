@@ -146,7 +146,6 @@ def scrape_articles(sites, main_keyword):
         return 'Error in scrape_articles'
     
 
-
 def start_periodic_scraping(main_keyword):
 
     scrapping_data_objects = session.query(SCRAPPING_DATA).filter(SCRAPPING_DATA.main_keyword == main_keyword).all()
@@ -177,7 +176,7 @@ def activate_news_bot(target):
         
         if scrapping_data_objects:
             main_keyword = scrapping_data_objects[0].main_keyword
-            job = scheduler.add_job(start_periodic_scraping, 'interval', minutes=4, id=target, replace_existing=True, args=[main_keyword], max_instances=2)
+            job = scheduler.add_job(start_periodic_scraping, 'interval', minutes=1, id=target, replace_existing=True, args=[main_keyword], max_instances=2)
             if job:
                 return f'{target.capitalize()} News Bot activated', 200
             else: 

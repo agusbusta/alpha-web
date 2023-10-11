@@ -42,7 +42,7 @@ class SCRAPPING_DATA(Base):
     sites = relationship("SITES", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=datetime.utcnow) 
 
-class KEWORDS(Base):
+class KEWORDS(Base): 
     __tablename__ = 'keyword'
 
     id = Column(Integer, primary_key=True)
@@ -50,7 +50,7 @@ class KEWORDS(Base):
     keyword = Column(String)  
     created_at = Column(DateTime, default=datetime.utcnow) 
 
-class BLACKLIST(Base):
+class BLACKLIST(Base): # son palabras que no deberian pasar el filtro en el titulo
     __tablename__ = 'blacklist'
 
     id = Column(Integer, primary_key=True)
