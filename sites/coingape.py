@@ -57,9 +57,6 @@ def validate_coingape_article(article_link, main_keyword):
         article_response = requests.get(article_link, headers=headers)
         article_content_type = article_response.headers.get("Content-Type", "").lower() 
 
-        content = "" 
-        html = BeautifulSoup(article_response.text, 'html.parser')  # Parsea el HTML del artículo
-
         if article_response.status_code == 200 and 'text/html' in article_content_type:
             article_soup = BeautifulSoup(article_response.text, 'html.parser')
 
@@ -86,16 +83,13 @@ def validate_coingape_article(article_link, main_keyword):
                 # print('Article does not meet requirements')
                 return None, None, None, None
            
-            valid_date = validate_date_coingape(html)
+            valid_date = validate_date_coingape(article_soup)
 
             # Extract image URLs from the article
             image_urls = extract_image_urls(article_response.text)
 
             if  content_validation and valid_date and title:
-                        print("\nTitle >", title)
-                        print('Date >', valid_date)
-                        print("Article_link >", article_link)
-                        return title, content, valid_date, image_urls
+                return title, content, valid_date, image_urls
             else:
                 return None, None, None, None
     except Exception as e:

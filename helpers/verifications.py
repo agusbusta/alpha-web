@@ -2,47 +2,33 @@ from db import session, ARTICLE, SCRAPPING_DATA, BLACKLIST
 from difflib import SequenceMatcher
 import ahocorasick 
 
-def title_in_db(input_title): #  true if title in db
-
+def title_in_db(input_title): # true if title already in db
     try:
-        all_title = session.query(ARTICLE.title).all()
-        title_list = [item[0].strip() for item in all_title]
+        # Check if the title already exists in the database (case-insensitive)
+        existing_title = session.query(ARTICLE).filter(ARTICLE.title.ilike(input_title)).first()
 
-        similarity_threshold = 0.9
-        is_title_in_db = False
-  
-        for title in title_list:
-            title_similarity_ratio = SequenceMatcher(None, input_title.casefold(), title.casefold()).ratio()
+        if existing_title:
+            return True
+        else:
+            return False
 
-            if title_similarity_ratio >= similarity_threshold:
-                is_title_in_db = True
-                break
-
-        return is_title_in_db
     except Exception as e:
-        print(f'error in title_in_db: {str(e)}')
-        return f'error in title_in_db: {str(e)}'
+        print(f'Error in title_in_db: {str(e)}')
+        return f'Error in title_in_db: {str(e)}'
 
-def url_in_db(input_url): #  true if url in db
-
+def url_in_db(input_url): # true if url already in db
     try:
-        all_url = session.query(ARTICLE.url).all()
-        url_list = [item[0].strip() for item in all_url]
+        # Check if the URL already exists in the database (case-insensitive)
+        existing_url = session.query(ARTICLE).filter(ARTICLE.url.ilike(input_url)).first()
 
-        similarity_threshold = 0.9
-        is_url_in_db = False
-  
-        for url in url_list:
-            url_similarity_ratio = SequenceMatcher(None, input_url.casefold(), url.casefold()).ratio()
+        if existing_url:
+            return True
+        else:
+            return False
 
-            if url_similarity_ratio >= similarity_threshold:
-                is_url_in_db = True
-                break
-
-        return is_url_in_db
     except Exception as e:
-        print(f'error in url_in_db: {str(e)}')
-        return f'error in url_in_db: {str(e)}'
+        print(f'Error in url_in_db: {str(e)}')
+        return f'Error in url_in_db: {str(e)}'
 
 def validate_content(main_keyword, content): # true if content is valid
     try:

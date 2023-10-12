@@ -84,10 +84,7 @@ def validate_cointelegraph_article(article_link, main_keyword):
             image_urls = extract_image_urls(article_response.text)
 
             if  content_validation and valid_date and title:
-                    print("\nTitle >", title)
-                    print('Date >', valid_date)
-                    print("Article_link >", article_link)
-                    return title, content, valid_date, image_urls
+                return title, content, valid_date, image_urls
             else:
                 return None, None, None, None
     except Exception as e:

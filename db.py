@@ -40,6 +40,7 @@ class SCRAPPING_DATA(Base):
     main_keyword = Column(String)
     keywords = relationship("KEWORDS", cascade="all, delete-orphan")
     sites = relationship("SITES", cascade="all, delete-orphan")
+    blacklist = relationship("BLACKLIST", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=datetime.utcnow) 
 
 class KEWORDS(Base): 
@@ -54,6 +55,7 @@ class BLACKLIST(Base): # son palabras que no deberian pasar el filtro en el titu
     __tablename__ = 'blacklist'
 
     id = Column(Integer, primary_key=True)
+    keyword_info_id = Column(Integer, ForeignKey('scrapping_data.id'), nullable=False)
     black_Word = Column(String)  
     created_at = Column(DateTime, default=datetime.utcnow) 
 
@@ -72,20 +74,6 @@ class SITES(Base):
 Base.metadata.create_all(engine)
 session = Session()  
 
-# Populate the blacklist table
-if not session.query(BLACKLIST).first():
-        
-    with open(f'{THIS_FOLDER}/data.json', 'r') as data_file:
-        config = json.load(data_file)
-
-    black_list = config[-1]
-    
-    for word in black_list['black_list']:
-        list_blackword=BLACKLIST(black_Word=word.casefold())
-        session.add(list_blackword)
-
-    print('Initial black list saved to db')
-    session.commit()
 
 # Populates the sites and keyword tables
 if not session.query(SCRAPPING_DATA).first():
@@ -93,15 +81,19 @@ if not session.query(SCRAPPING_DATA).first():
     with open(f'{THIS_FOLDER}/data.json', 'r') as data_file:
         config = json.load(data_file)
 
-    for item in config[:-1]:   
+    for item in config:   
         keyword = item['main_keyword']
         keywords = item['keywords']
         sites = item['sites']
+        black_list = item['black_list']
 
         scrapping_data = SCRAPPING_DATA(main_keyword=keyword.casefold())
 
         for keyword in keywords:
             scrapping_data.keywords.append(KEWORDS(keyword=keyword.casefold()))
+
+        for word in black_list:
+            scrapping_data.blacklist.append(BLACKLIST(black_Word=word.casefold()))
 
         for site_data in sites:
             site = SITES(

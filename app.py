@@ -14,9 +14,71 @@ from sites.cointelegraph import validate_cointelegraph_article
 from apscheduler.schedulers.background import BackgroundScheduler
 from helpers.verifications import url_in_db, title_in_db, title_in_blacklist
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MAX_INSTANCES, EVENT_JOB_EXECUTED
+import os
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 scheduler = BackgroundScheduler()
 scheduler.add_jobstore('sqlalchemy', url= db_url)
+
+token=os.getenv("SLACK_BOT_TOKEN")
+signing_secret=os.getenv("SLACK_SIGNING_SECRET")
+
+client = WebClient(
+    token='xoxb-3513855583013-5898199192705-a9ya5KSY45LCdhKd4eeMa8Yx',
+)
+
+def send_message_to_slack(channel_id, title, date_time, url, summary, images_list):
+        blocks=[
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"Title: {title}",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Date:*\n{date_time}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*URL:*\n{url}"
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Summary:*\n{summary}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Images:*\n{images_list[0] if images_list else 'No relevant image found'}"
+                    }
+                ]
+            }
+        ]
+    
+        try:
+            result = client.chat_postMessage(
+                channel=channel_id,
+                text='New Notification from News Bot', 
+                blocks=blocks
+            )
+            response = result['ok']
+            if response == True:
+                return f'Message sent successfully to Slack channel {channel_id}', 200
+
+        except SlackApiError as e:
+            print(f"Error posting message: {e}")
+            return f'Error sending message to Slack channel {channel_id}', 500
 
 
 if scheduler.state != 1:
@@ -28,7 +90,7 @@ app = Flask(__name__)
 
 def scrape_sites(site,base_url, website_name, is_URL_complete, main_keyword):
 
-    article_urls = []
+    article_urls = set()
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -49,18 +111,27 @@ def scrape_sites(site,base_url, website_name, is_URL_complete, main_keyword):
                 else:
                     article_url = href.strip()
 
-                if main_keyword == 'hacks' or main_keyword == 'lsd':
-                    title_validation = True
-                else:
+                
+                if main_keyword == 'bitcoin':
                     input_title_formatted = str(article_title).strip().casefold()
-                    title_validation = re.search(main_keyword, input_title_formatted, re.IGNORECASE)
+                    title_validation = bool(re.search(main_keyword, input_title_formatted, re.IGNORECASE))
+                else:
+                    title_validation = True
+                # if main_keyword == 'hacks' or main_keyword == 'lsd':
+                #     title_validation = True
+                # else:
+                #     input_title_formatted = str(article_title).strip().casefold()
+                #     title_validation = bool(re.search(main_keyword, input_title_formatted, re.IGNORECASE))
+                #     title_validation_ether = bool(re.search('ether', input_title_formatted, re.IGNORECASE))
 
                 is_url_in_db = url_in_db(article_url)
                 is_title_in_db = title_in_db(article_title)
                 is_title_in_blacklist = title_in_blacklist(article_title)
            
-                if title_validation and not is_title_in_blacklist and not is_url_in_db and not is_title_in_db:
-                    article_urls.append({'url': article_url, 'title': article_title})
+                if title_validation == True:
+                    if is_title_in_blacklist == False:
+                        if is_url_in_db == False and is_title_in_db == False:
+                            article_urls.add(article_url)
 
 
         browser.close()
@@ -87,8 +158,7 @@ def scrape_articles(sites, main_keyword):
             return f'No articles found for {website_name}'
 
         if article_urls:
-            for article_schema in article_urls:
-                article_link = article_schema['url']
+            for article_link in article_urls:
 
                 article_to_save = []
 
@@ -96,31 +166,26 @@ def scrape_articles(sites, main_keyword):
                     title, content, valid_date, image_urls = validate_beincrypto_article(article_link, main_keyword)
                     if title and content and valid_date:
                         article_to_save.append((title, content, valid_date, article_link, website_name))
-                        print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Bitcoinist':
                     title, content, valid_date, image_urls = validate_bitcoinist_article(article_link, main_keyword)
                     if title and content and valid_date:
                         article_to_save.append((title, content, valid_date, article_link, website_name))
-                        print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Cointelegraph':
                     title, content, valid_date, image_urls = validate_cointelegraph_article(article_link, main_keyword)
                     if title and content and valid_date:
                         article_to_save.append((title, content, valid_date, article_link, website_name))
-                        print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Coingape':
                     title, content, valid_date, image_urls = validate_coingape_article(article_link, main_keyword)
                     if title and content and valid_date:
                         article_to_save.append((title, content, valid_date, article_link, website_name))
-                        print(f'{website_name} article ok to saved to db')
 
                 if website_name == 'Coindesk':
                     title, content, valid_date, image_urls = validate_coindesk_article(article_link, main_keyword)
                     if title and content and valid_date:
                         article_to_save.append((title, content, valid_date, article_link, website_name))
-                        print(f'{website_name} article ok to saved to db')
 
                 
                 for article_data in article_to_save:
@@ -135,10 +200,23 @@ def scrape_articles(sites, main_keyword):
 
                     session.add(new_article)
                     session.commit()
-                    print(f'{title} added to db, Link: {article_link}')
-
-                
-
+                    
+                    btc_slack_channel_id = 'C05RK7CCDEK'
+                    eth_slack_channel_id = 'C05URLDF3JP'
+                    lsd_slack_channel_id = 'C05UNS3M8R3'
+                    hacks_slack_channel_id = 'C05UU8JBKKN'
+                    
+                    if main_keyword == 'bitcoin':
+                        channel_id = btc_slack_channel_id
+                    elif main_keyword == 'ethereum':
+                        channel_id = eth_slack_channel_id
+                    elif main_keyword == 'hacks':
+                        channel_id = hacks_slack_channel_id
+                    else:
+                        channel_id = lsd_slack_channel_id
+                    
+                    send_message_to_slack(channel_id=channel_id)
+                    print(f'\nArticle: "{title}" has been added to the DB, Link: {article_link} from {website_name} in {main_keyword.capitalize()}.')
 
             
             return f'Web scrapping of {website_name} finished'
@@ -176,7 +254,7 @@ def activate_news_bot(target):
         
         if scrapping_data_objects:
             main_keyword = scrapping_data_objects[0].main_keyword
-            job = scheduler.add_job(start_periodic_scraping, 'interval', minutes=1, id=target, replace_existing=True, args=[main_keyword], max_instances=2)
+            job = scheduler.add_job(start_periodic_scraping, 'interval', minutes=5, id=target, replace_existing=True, args=[main_keyword], max_instances=2)
             if job:
                 return f'{target.capitalize()} News Bot activated', 200
             else: 
@@ -261,6 +339,12 @@ def news_bot_commands():
             return 'Command not valid', 400
         
 
+@app.route("/api/slack/post/message", methods=["POST"])
+def slack_post_message():
+    response, status = send_message_to_slack('C05RM0DF8J3','Test Title', 'Test Date', 'Test Url', 'Test Summary', 'Test Image Link')
+    return response, status
+        
+
 def job_executed(event): # for the status 200 of the bot
     print(f'{event.job_id} was executed successfully at {event.scheduled_run_time}, response: {event.retval}')
 
@@ -273,16 +357,16 @@ def job_max_instances_reached(event): # for the status with an error of the bot
    
 
 if __name__ == "__main__":       
-    try:
+    # try:
         scheduler.add_listener(job_error, EVENT_JOB_ERROR)
         scheduler.add_listener(job_max_instances_reached, EVENT_JOB_MAX_INSTANCES)
         scheduler.add_listener(job_executed, EVENT_JOB_EXECUTED)
         print('AI Alpha server was activated')
-        app.run(port=4000, threaded=True, use_reloader=False)
-    except (KeyboardInterrupt, SystemExit):
-        pass 
+        app.run(port=4000, threaded=True, use_reloader=True)
+    # except (KeyboardInterrupt, SystemExit):
+    #     pass 
 
-    print('AI Alpha server was deactivated')
+    # print('AI Alpha server was deactivated')
 
 
 
