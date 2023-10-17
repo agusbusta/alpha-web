@@ -28,6 +28,13 @@ client = WebClient(
     token='xoxb-3513855583013-5898199192705-a9ya5KSY45LCdhKd4eeMa8Yx',
 )
 
+if scheduler.state != 1:
+    scheduler.start()
+
+THIS_FOLDER = Path(__file__).parent.resolve() # takes the parent path
+
+app = Flask(__name__)
+
 def send_message_to_slack(channel_id, title, date_time, url, summary, images_list):
         blocks=[
             {
@@ -52,17 +59,19 @@ def send_message_to_slack(channel_id, title, date_time, url, summary, images_lis
                 ]
             },
             {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*Summary:*\n{summary}"
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*Images:*\n{images_list[0] if images_list else 'No relevant image found'}"
-                    }
-                ]
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": f"*Summary*\n{summary}"
+			},
+			"accessory": {
+				"type": "image",
+				"image_url": f"{images_list[0] if images_list else 'No Image'}",
+				"alt_text": "alt text for image"
+			}
+            },
+            {
+                "type": "divider"
             }
         ]
     
@@ -81,61 +90,53 @@ def send_message_to_slack(channel_id, title, date_time, url, summary, images_lis
             return f'Error sending message to Slack channel {channel_id}', 500
 
 
-if scheduler.state != 1:
-    scheduler.start()
-
-THIS_FOLDER = Path(__file__).parent.resolve() # takes the parent path
-
-app = Flask(__name__)
-
 def scrape_sites(site,base_url, website_name, is_URL_complete, main_keyword):
 
     article_urls = set()
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
 
-        page.goto(site)
-        page.wait_for_load_state('networkidle')
+            page.goto(site)
+            page.wait_for_load_state('networkidle')
 
-        a_elements = page.query_selector_all('a')
+            a_elements = page.query_selector_all('a')
 
-        for link in a_elements:
-            href = link.get_attribute('href')
-            article_title = link.text_content().strip().casefold()
+            for link in a_elements:
+                href = link.get_attribute('href')
+                article_title = link.text_content().strip().casefold()
 
-            if href and article_title:
-                if is_URL_complete == False:
-                    article_url = base_url + href.strip()
-                else:
-                    article_url = href.strip()
+                if href and article_title:
+                    if is_URL_complete == False:
+                        article_url = base_url + href.strip()
+                    else:
+                        article_url = href.strip()
 
-                
-                if main_keyword == 'bitcoin':
-                    input_title_formatted = str(article_title).strip().casefold()
-                    title_validation = bool(re.search(main_keyword, input_title_formatted, re.IGNORECASE))
-                else:
-                    title_validation = True
-                # if main_keyword == 'hacks' or main_keyword == 'lsd':
-                #     title_validation = True
-                # else:
-                #     input_title_formatted = str(article_title).strip().casefold()
-                #     title_validation = bool(re.search(main_keyword, input_title_formatted, re.IGNORECASE))
-                #     title_validation_ether = bool(re.search('ether', input_title_formatted, re.IGNORECASE))
+                    
+                    if main_keyword == 'bitcoin':
+                        input_title_formatted = str(article_title).strip().casefold()
+                        title_validation = bool(re.search(main_keyword, input_title_formatted, re.IGNORECASE))
+                    else:
+                        title_validation = True
+    
+                    is_url_in_db = url_in_db(article_url)
+                    is_title_in_db = title_in_db(article_title)
+                    is_title_in_blacklist = title_in_blacklist(article_title)
+            
+                    if title_validation == True:
+                        if is_title_in_blacklist == False:
+                            if is_url_in_db == False and is_title_in_db == False:
+                                article_urls.add(article_url)
 
-                is_url_in_db = url_in_db(article_url)
-                is_title_in_db = title_in_db(article_title)
-                is_title_in_blacklist = title_in_blacklist(article_title)
+
+            browser.close()
+            return article_urls, website_name
+    except Exception as e:
+        return f'Failed to scrape: {e}'
+        
            
-                if title_validation == True:
-                    if is_title_in_blacklist == False:
-                        if is_url_in_db == False and is_title_in_db == False:
-                            article_urls.add(article_url)
-
-
-        browser.close()
-        return article_urls, website_name
 
 
 def scrape_articles(sites, main_keyword):

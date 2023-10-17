@@ -6,7 +6,6 @@ from pathlib import Path
 import json
 from sqlalchemy.orm import sessionmaker
 
-THIS_FOLDER = Path(__file__).parent.resolve()
 
 DB_NAME='aialpha'    
 DB_USER='postgres' 
@@ -14,6 +13,7 @@ DB_PASSWORD='postgres'
 DB_PORT=5432
 DB_HOST='localhost'
 
+THIS_FOLDER = Path(__file__).parent.resolve()
 
 db_url = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 engine = create_engine(db_url)
@@ -31,7 +31,14 @@ class ARTICLE(Base):
     date = Column(String)   
     url = Column(String)   
     website_name = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow) 
+    images = relationship("IMAGE", backref="article", cascade="all, delete-orphan")
+
+class IMAGE(Base):
+    __tablename__ = 'image'
+
+    id = Column(Integer, primary_key=True)
+    article_id = Column(Integer, ForeignKey('article.id'))
+    url = Column(String) 
 
 class SCRAPPING_DATA(Base):
     __tablename__ = 'scrapping_data'

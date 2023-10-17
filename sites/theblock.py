@@ -45,10 +45,10 @@ def validate_theblock_article(article_link):
     try:
         article_response = requests.get(article_link, headers=headers)
         article_content_type = article_response.headers.get("Content-Type", "").lower()
-        content = ""
-        html = BeautifulSoup(article_response.text, 'html.parser')
 
         if article_response.status_code == 200 and 'text/html' in article_content_type:
+
+            html = BeautifulSoup(article_response.text, 'html.parser')
             title_element = html.find('h1')
             title = title_element.text.strip() if title_element else None
 
@@ -64,7 +64,7 @@ def validate_theblock_article(article_link):
             else:
                 return None, None, None, None
     except Exception as e:
-        print("Error:", str(e))
+        print("Error in Theblock:", str(e))
         return None, None, None, None
 
 

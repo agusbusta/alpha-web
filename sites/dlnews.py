@@ -38,6 +38,7 @@ def extract_article_content_dlnews(html):
     return None
 
 def validate_dlnews_article(article_link):
+
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'
     }
@@ -45,10 +46,11 @@ def validate_dlnews_article(article_link):
     try:
         article_response = requests.get(article_link, headers=headers)
         article_content_type = article_response.headers.get("Content-Type", "").lower()
-        content = ""
-        html = BeautifulSoup(article_response.text, 'html.parser')
 
         if article_response.status_code == 200 and 'text/html' in article_content_type:
+            
+            html = BeautifulSoup(article_response.text, 'html.parser')
+
             title_element = html.find('h1')
             title = title_element.text.strip() if title_element else None
 
@@ -64,6 +66,7 @@ def validate_dlnews_article(article_link):
             else:
                 return None, None, None, None
     except Exception as e:
+        print("Error in Dlnews:", str(e))
         return None, None, None, None
 
 
