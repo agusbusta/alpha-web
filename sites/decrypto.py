@@ -63,7 +63,7 @@ def validate_decrypt_article(article_link):
                 print("Image URLs:", image_urls)
                 return title, content, valid_date, image_urls
             else:
-                return None, None, None, None
+                return None, None, None, None   
     except Exception as e:
         print("Error in Decrypt:", str(e))
         return None, None, None, None
