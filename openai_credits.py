@@ -1,4 +1,7 @@
 import requests
+import os
+
+api_key=os.getenv("API_KEY")
 
 def check_openai_credits(api_key):
     try:
@@ -18,5 +21,5 @@ def check_openai_credits(api_key):
 
 
 # Uso de la función
-api_key = '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'  # Reemplaza con tu clave de API de OpenAI
+api_key = api_key # Reemplaza con tu clave de API de OpenAI
 check_openai_credits(api_key)

@@ -25,7 +25,7 @@ token=os.getenv("SLACK_BOT_TOKEN")
 signing_secret=os.getenv("SLACK_SIGNING_SECRET")
 
 client = WebClient(
-    token=token,
+    token=token
 )
 
 if scheduler.state != 1:
