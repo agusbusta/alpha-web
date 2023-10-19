@@ -31,6 +31,8 @@ def split_string(input_string):
     current_string = chunks[0]
     
     for part in chunks[1:]:
+        print('current_string > ', current_string)
+        print('part > ', part)
         # Verificamos si el string actual junto con el próximo fragmento, incluyendo el dash
         # tiene menos de 280 caracteres
         if len(current_string + "-" + part) < 280:
@@ -40,7 +42,7 @@ def split_string(input_string):
             # Si supera los 280 caracteres, agregamos el string actual a la lista de resultados
             result.append(current_string)
             # Empezamos un nuevo string con el fragmento actual
-            current_string = part
+            current_string = "-" + part
 
     # Agregamos el último string al resultado
     result.append(current_string)
