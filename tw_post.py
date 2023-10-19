@@ -1,7 +1,7 @@
-import tweepy
 from tweepy.errors import TweepyException
-import os
 from dotenv import load_dotenv
+import tweepy
+import os
 
 load_dotenv()
 
@@ -23,26 +23,24 @@ auth = tweepy.Client(
 
 print('Logged user > ', auth.get_me()[0])
 
-def split_string(input_string):
+def split_string(input_string: str) -> str:
     result = []
 
-    chunks = input_string.split("-")
+    chunks = input_string.split("- ")
     
     current_string = chunks[0]
     
     for part in chunks[1:]:
-        print('current_string > ', current_string)
-        print('part > ', part)
         # Verificamos si el string actual junto con el próximo fragmento, incluyendo el dash
         # tiene menos de 280 caracteres
         if len(current_string + "-" + part) < 280:
             # Si es así, agregamos el fragmento y el dash al string actual
-            current_string += "-" + part
+            current_string += "•" + part
         else:
             # Si supera los 280 caracteres, agregamos el string actual a la lista de resultados
             result.append(current_string)
             # Empezamos un nuevo string con el fragmento actual
-            current_string = "-" + part
+            current_string = "•" + part
 
     # Agregamos el último string al resultado
     result.append(current_string)
@@ -81,7 +79,7 @@ def split_text_into_paragraphs(text, max_length=270):
 
     return combined_paragraphs
 
-def send_tweets_to_twitter(content):
+def send_tweets_to_twitter(content: str) -> list:
 
     if len(content) == 0:
         return 'Content has length 0', 404
@@ -90,30 +88,29 @@ def send_tweets_to_twitter(content):
 
     if len(paragraphs) == 1:
         try:
+
             # Si solo hay un párrafo, publica un solo tweet
             response = auth.create_tweet(text=paragraphs[0])
-            print('response in length == 1 > ', response)
             return 'Summary sent to twitter successfully', 200
+        
         except TweepyException as e:
             print('An error occured:' + str(e))
             return 'An error occured:' + str(e), 500
 
     else:
+
         # Si hay varios párrafos, publica un hilo de tweets
         id = None
         try:
+
             for i, paragraph in enumerate(paragraphs):
                 if i == 0:
-                    print('paragraph 0 > ', paragraph)
                     response = auth.create_tweet(text=paragraph)
                     id = response[0].get("id")
-                    print('response in i == 0 > ', response)
-                
                 else:
-                    print('next paragraph> ', paragraph)
                     response = auth.create_tweet(text=paragraph, in_reply_to_tweet_id=id)
-                    print('response in i > 0 > ', response)
             return 'Summary sent to twitter successfully', 200
+        
         except TweepyException as e:
             print('An error occured:' + str(e))
             return 'An error occured:' + str(e), 500
@@ -131,5 +128,5 @@ Bitcoin ATM installations hit two-year low worldwide
 - Some operators turning off unprofitable ATMs
 - Bitcoin Depot sees opportunity for market share growth through acquisitions and retail expansion.
 """
-print(split_string(content))
-# send_tweets_to_twitter(content)
+# print(split_string(content)) # test the content
+# send_tweets_to_twitter(content) # test sending the tweet
