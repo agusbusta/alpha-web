@@ -11,33 +11,38 @@ def get_indicator(indicator: str, strategy_name: str) -> str:
         return False
     
 
-def create_alert_chart(data):
+def split_string(input_string):
+    result = []
+
+    chunks = input_string.split("-")
     
+    current_string = chunks[0]
+    
+    for part in chunks[1:]:
+        # Verificamos si el string actual junto con el próximo fragmento, incluyendo el dash
+        # tiene menos de 280 caracteres
+        if len(current_string + "-" + part) < 280:
+            # Si es así, agregamos el fragmento y el dash al string actual
+            current_string += "-" + part
+        else:
+            # Si supera los 280 caracteres, agregamos el string actual a la lista de resultados
+            result.append(current_string)
+            # Empezamos un nuevo string con el fragmento actual
+            current_string = part
 
+    # Agregamos el último string al resultado
+    result.append(current_string)
+    
+    return result
 
-# Replace with your data source for BTC and the benchmark asset
-# For this example, we'll assume you have two pandas DataFrames, btc_data and benchmark_data.
-
-# Calculate relative strength
-relative_strength = btc_data['Close'] / benchmark_data['Close']
-
-# Create a Plotly figure
-fig = go.Figure()
-
-# Add a line chart for BTC's price
-fig.add_trace(go.Scatter(x=btc_data['Date'], y=btc_data['Close'], mode='lines', name='BTC'))
-
-# Add a line chart for the benchmark asset's price
-fig.add_trace(go.Scatter(x=benchmark_data['Date'], y=benchmark_data['Close'], mode='lines', name='Benchmark'))
-
-# Add a line chart for the relative strength
-fig.add_trace(go.Scatter(x=btc_data['Date'], y=relative_strength, mode='lines', name='Relative Strength', yaxis='y2'))
-
-# Create a secondary y-axis for the relative strength
-fig.update_layout(yaxis2=dict(title='Relative Strength', overlaying='y', side='right'))
-
-# Customize the layout and labels
-fig.update_layout(title='BTC Relative Strength Analysis', xaxis_title='Date', yaxis_title='Price', legend=dict(x=0, y=1))
-
-# Show the chart
-fig.show()
+input_string = """
+Bitcoin ATM installations hit two-year low worldwide
+- Number of bitcoin ATMs dropped by 17%
+- US experienced the biggest decline, now has 26,700 machines
+- Europe has only 1,500 machines
+- Decline attributed to controversies and criminal use
+- Some operators turning off unprofitable ATMs
+- Bitcoin Depot sees opportunity for market share growth through acquisitions and retail expansion.
+"""
+resultados = split_string(input_string)
+print(resultados)

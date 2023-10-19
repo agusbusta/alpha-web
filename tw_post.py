@@ -1,8 +1,10 @@
 import tweepy
+from tweepy.errors import TweepyException
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 TWITTER_API_KEY=os.getenv("TWITTER_API_KEY")
 TWITTER_KEY_SECRET=os.getenv("TWITTER_KEY_SECRET")
@@ -10,6 +12,40 @@ TWITTER_KEY_SECRET=os.getenv("TWITTER_KEY_SECRET")
 TWITTER_ACCESS_TOKEN=os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_TOKEN_SECRET=os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 TWITTER_BEARER_TOKEN=os.getenv("TWITTER_BEARER_TOKEN")
+
+auth = tweepy.Client(
+        TWITTER_BEARER_TOKEN,
+        TWITTER_API_KEY,
+        TWITTER_KEY_SECRET,
+        TWITTER_ACCESS_TOKEN,
+        TWITTER_ACCESS_TOKEN_SECRET
+    )
+
+print('Logged user > ', auth.get_me()[0])
+
+def split_string(input_string):
+    result = []
+
+    chunks = input_string.split("-")
+    
+    current_string = chunks[0]
+    
+    for part in chunks[1:]:
+        # Verificamos si el string actual junto con el próximo fragmento, incluyendo el dash
+        # tiene menos de 280 caracteres
+        if len(current_string + "-" + part) < 280:
+            # Si es así, agregamos el fragmento y el dash al string actual
+            current_string += "-" + part
+        else:
+            # Si supera los 280 caracteres, agregamos el string actual a la lista de resultados
+            result.append(current_string)
+            # Empezamos un nuevo string con el fragmento actual
+            current_string = part
+
+    # Agregamos el último string al resultado
+    result.append(current_string)
+    
+    return result
 
 def split_text_into_paragraphs(text, max_length=270):
     paragraphs = []
@@ -44,34 +80,54 @@ def split_text_into_paragraphs(text, max_length=270):
     return combined_paragraphs
 
 def send_tweets_to_twitter(content):
-    auth = tweepy.Client(
-        TWITTER_BEARER_TOKEN,
-        TWITTER_API_KEY,
-        TWITTER_KEY_SECRET,
-        TWITTER_ACCESS_TOKEN,
-        TWITTER_ACCESS_TOKEN_SECRET
-    )
-    
-    paragraphs = split_text_into_paragraphs(content)
+
+    if len(content) == 0:
+        return 'Content has length 0', 404
+   
+    paragraphs = split_string(content)
 
     if len(paragraphs) == 1:
-        # Si solo hay un párrafo, publica un solo tweet
-        response = auth.create_tweet(text=paragraphs[0])
+        try:
+            # Si solo hay un párrafo, publica un solo tweet
+            response = auth.create_tweet(text=paragraphs[0])
+            print('response in length == 1 > ', response)
+            return 'Summary sent to twitter successfully', 200
+        except TweepyException as e:
+            print('An error occured:' + str(e))
+            return 'An error occured:' + str(e), 500
 
     else:
         # Si hay varios párrafos, publica un hilo de tweets
         id = None
-        for i, paragraph in enumerate(paragraphs):
-            if i == 0:
-                response = auth.create_tweet(text=paragraph)
-                id = response[0].get("id")
-            
-            else:
-                response = auth.create_tweet(text=paragraph, in_reply_to_tweet_id=id)
+        try:
+            for i, paragraph in enumerate(paragraphs):
+                if i == 0:
+                    print('paragraph 0 > ', paragraph)
+                    response = auth.create_tweet(text=paragraph)
+                    id = response[0].get("id")
+                    print('response in i == 0 > ', response)
+                
+                else:
+                    print('next paragraph> ', paragraph)
+                    response = auth.create_tweet(text=paragraph, in_reply_to_tweet_id=id)
+                    print('response in i > 0 > ', response)
+            return 'Summary sent to twitter successfully', 200
+        except TweepyException as e:
+            print('An error occured:' + str(e))
+            return 'An error occured:' + str(e), 500
               
     
-    return 'ok', 200
+
 
 # Example usage
-content = "Este es un ejemplo de un texto largo que queremos dividir en párrafos. Cada párrafo no debe exceder los 270 caracteres y debe tener puntos y aparte donde corresponda. Esto es un ejemplo de un párrafo más largo.Este es un ejemplo de un texto largo que queremos dividir en párrafos. Cada párrafo no debe exceder los 270 caracteres y debe tener puntos y aparte donde corresponda. Esto es un ejemplo de un párrafo más largo.."
-send_tweets_to_twitter(content)
+content = """
+Bitcoin ATM installations hit two-year low worldwide
+- Number of bitcoin ATMs dropped by 17%
+- US experienced the biggest decline, now has 26,700 machines
+- Europe has only 1,500 machines
+- Decline attributed to controversies and criminal use
+- Some operators turning off unprofitable ATMs
+- Bitcoin Depot sees opportunity for market share growth through acquisitions and retail expansion.
+"""
+print(split_string(content))
+# send_tweets_to_twitter(content)
