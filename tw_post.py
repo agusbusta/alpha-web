@@ -104,8 +104,9 @@ def send_tweets_to_twitter(content: str) -> list:
         return 'Content has length 0', 404
 
     paragraphs = split_string(content)
-    bold_title = bold(find_title_between_asterisks(paragraphs[0]))  # Obtener título en negritas
-    paragraphs[0] = find_title_between_asterisks(paragraphs[0])  # Eliminar ** del título
+    title = find_title_between_asterisks(paragraphs[0])  # Obtener el título original
+    bold_title = bold(title)  # Obtener el título en negritas
+    paragraphs[0] = title  # Reemplazar el título original en el primer párrafo
 
     if len(paragraphs) == 1:
         try:
