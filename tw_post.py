@@ -120,7 +120,7 @@ def send_tweets_to_twitter(content: str) -> list:
 
 # Example usage
 content = """
-Bitcoin ATM installations hit two-year low worldwide
+*Bitcoin ATM installations hit two-year low worldwide*
 - Number of bitcoin ATMs dropped by 17%
 - US experienced the biggest decline, now has 26,700 machines
 - Europe has only 1,500 machines
@@ -129,4 +129,4 @@ Bitcoin ATM installations hit two-year low worldwide
 - Bitcoin Depot sees opportunity for market share growth through acquisitions and retail expansion.
 """
 # print(split_string(content)) # test the content
-# send_tweets_to_twitter(content) # test sending the tweet
+send_tweets_to_twitter(content) # test sending the tweet
