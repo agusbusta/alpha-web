@@ -20,7 +20,7 @@ auth = tweepy.Client(
     TWITTER_ACCESS_TOKEN_SECRET
 )
 
-print('Logged user >', auth.get_me()[0])
+#print('Logged user >', auth.get_me()[0])
 
 def split_string(input_string: str) -> str:
     result = []
@@ -106,12 +106,12 @@ def send_tweets_to_twitter(content: str) -> list:
     paragraphs = split_string(content)
     title = find_title_between_asterisks(paragraphs[0])  # Obtener el título original
     bold_title = bold(title)  # Obtener el título en negritas
-    paragraphs[0] = title  # Reemplazar el título original en el primer párrafo
+
 
     if len(paragraphs) == 1:
         try:
             # Si solo hay un párrafo, publica un solo tweet
-            response = auth.create_tweet(text=bold_title + '\n' + paragraphs[0])
+            #response = auth.create_tweet(text=bold_title + '\n' + paragraphs[0])
             return 'Summary sent to Twitter successfully', 200
         except TweepyException as e:
             print('An error occurred:' + str(e))
@@ -121,10 +121,17 @@ def send_tweets_to_twitter(content: str) -> list:
         try:
             for i, paragraph in enumerate(paragraphs):
                 if i == 0:
-                    response = auth.create_tweet(text=bold_title + '\n' + paragraphs[0])
-                    id = response[0].get("id")
+     
+                    lines = paragraph.split('\n')
+                    lines[1] = bold_title
+                    final_paragraph = '\n'.join(lines)
+    
+                    print(final_paragraph)
+                    #response = auth.create_tweet(text=bold_title + '\n' + paragraphs[0])
+                    #id = response[0].get("id")
                 else:
-                    response = auth.create_tweet(text=paragraph, in_reply_to_tweet_id=id)
+                    print("2",paragraph)
+                    #response = auth.create_tweet(text=paragraph, in_reply_to_tweet_id=id)
             return 'Summary sent to Twitter successfully', 200
         except TweepyException as e:
             print('An error occurred:' + str(e))
