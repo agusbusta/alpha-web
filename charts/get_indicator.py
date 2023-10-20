@@ -59,8 +59,9 @@ def generate_chart(symbol_asset, price):
     )
     
     fig.show()
+    image_bytes = fig.to_image(format="png")
+    return image_bytes
 
 generate_chart('BTCUSDT', '29.271')
 
-    # image_bytes = fig.to_image(format="png")
-    # return image_bytes
+   
