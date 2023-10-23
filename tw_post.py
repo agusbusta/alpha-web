@@ -110,7 +110,7 @@ def send_tweets_to_twitter(content: str) -> list:
 
     if len(paragraphs) == 1:
         try:
-            # Si solo hay un párrafo, publica un solo tweet
+        
             #response = auth.create_tweet(text=bold_title + '\n' + paragraphs[0])
             return 'Summary sent to Twitter successfully', 200
         except TweepyException as e:
