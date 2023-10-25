@@ -39,6 +39,17 @@ def generate_chart_with_support_resistance(symbol_asset, interval, resistance_le
         )
     )
 
+    # Agrega una etiqueta a la línea de resistencia
+    fig.add_annotation(
+        go.layout.Annotation(
+            x=df['Timestamp'].iloc[-1],
+            y=resistance_level,
+            text=f'Resistance 1',
+            showarrow=True,
+            arrowhead=4,
+        )
+    )
+
     # Agrega una línea de soporte al gráfico
     fig.add_shape(
         go.layout.Shape(
@@ -48,6 +59,17 @@ def generate_chart_with_support_resistance(symbol_asset, interval, resistance_le
             x1=df['Timestamp'].iloc[-1],
             y1=support_level,
             line=dict(color='green', width=2),
+        )
+    )
+
+    # Agrega una etiqueta a la línea de soporte
+    fig.add_annotation(
+        go.layout.Annotation(
+            x=df['Timestamp'].iloc[-1],
+            y=support_level,
+            text=f'Support 1',
+            showarrow=True,
+            arrowhead=4,
         )
     )
 
@@ -67,4 +89,4 @@ def generate_chart_with_support_resistance(symbol_asset, interval, resistance_le
     fig.show()
 
 # Ejemplo de uso: ETHBTC 1W Resistencia en 2, Soporte en 1
-generate_chart_with_support_resistance('ETHBTC', '1d', 0.053, 0.063)
+generate_chart_with_support_resistance('ETHUSDT', '1d', 1753, 1763)
